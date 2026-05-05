@@ -1,0 +1,84 @@
+import React, { useState } from 'react';
+import './styles.css';
+import { crearCurso } from './services/registroService'; // <--- 1. IMPORTAMOS LA FUNCIÓN
+
+const App = () => {
+  const [view, setView] = useState('login'); 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const modulosData = [
+    { id: 1, titulo: "Horario Docente", link: "http://localhost:8001" },
+    { id: 2, titulo: "Registro de Cursos", link: "http://localhost:8002" },
+    { id: 3, titulo: "Registro Asistencia Alumnos", link: "http://localhost:8003" },
+    { id: 4, titulo: "Servicio Social / Prácticas", link: "http://localhost:8004" },
+    { id: 5, titulo: "Sistema de Calificación", link: "http://localhost:8005" }
+  ];
+
+  const handleLogin = (e) => { /* ... tu lógica de login intacta ... */ 
+    e.preventDefault(); setError('');
+    if (!email.endsWith('@unach.mx')) { setError('Usa tu correo institucional (@unach.mx).'); return; }
+    if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return; }
+    setIsLoggedIn(true); setView('landing'); setEmail(''); setPassword('');
+  };
+
+  // ---> 2. FUNCIÓN DE PRUEBA PARA MANDAR A GO <---
+  const probarConexionGo = async () => {
+    console.log("⏳ Enviando datos de prueba a Go (Puerto 8002)...");
+    
+    // Datos ficticios imitando la estructura que pide tu Go
+    const cursoFicticio = {
+      nombre: "Microservicios Avanzados",
+      tipo: "Optativa",
+      modalidad: "En línea",
+      objetivo: "Probar la conexión React-Go-RabbitMQ",
+      contenido: "Docker, Kubernetes, Go",
+      duracion: "20 horas",
+      horario: "Viernes 18:00-20:00"
+    };
+
+    const respuesta = await crearCurso(cursoFicticio);
+    
+    if (respuesta) {
+      alert(`✅ ¡Éxito! El servidor de Go respondió: ${respuesta.status}`);
+    } else {
+      alert("❌ Falló la conexión. Revisa la consola.");
+    }
+  };
+
+  if (!isLoggedIn && (view === 'login' || view === 'signup')) {
+    // ... tu HTML de login intacto ...
+    return ( /* Código del login... */ <div>...</div> );
+  }
+
+  return (
+    <div className="app-container">
+      <header className="header">
+        <h1>UNACH - Dashboard</h1>
+        <nav>
+          {/* ---> 3. BOTÓN DE PRUEBA <--- */}
+          <button onClick={probarConexionGo} className="btn-secondary" style={{marginRight: '15px', background: '#d4a017', color: 'white'}}>
+            ⚡ Probar Conexión a Go
+          </button>
+          
+          <button onClick={() => setIsLoggedIn(false)} className="btn-logout">Cerrar Sesión</button>
+        </nav>
+      </header>
+      <main className="hero">
+        <h2>Bienvenido al Sistema</h2>
+        <div className="grid-container">
+          {modulosData.map(m => (
+            <div key={m.id} className="card">
+              <h4>{m.titulo}</h4>
+              <a href={m.link} className="btn-secondary">Entrar</a>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default App;
