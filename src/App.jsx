@@ -4,7 +4,7 @@ import LandingPage from './pages/LandingPage';
 
 const App = () => {
   // 1. Estados de la aplicación
-  const [view, setView] = useState('presentacion'); 
+  const [view, setView] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,7 +30,7 @@ const App = () => {
     const endpoint = isAdmin ? '/api/login' : '/api/login-docente';
     
     // Usamos la variable de entorno para la URL de AWS, o el dominio directamente por seguridad
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://siae-unach.duckdns.org';
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://54.147.115.227:8000';
     const url = `${baseUrl}${endpoint}`;
 
     // Armar el payload según lo que espera el backend de Ximena
@@ -228,4 +228,4 @@ const App = () => {
   return null;
 };
 
-export default App;cd
+export default App; 
