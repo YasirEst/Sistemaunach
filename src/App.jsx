@@ -1,38 +1,82 @@
 import React, { useState } from 'react';
 import './styles.css'; 
-
-// Importamos nuestra Landing Page
 import LandingPage from './pages/LandingPage'; 
 
 const App = () => {
-  // 1. Estado inicial: Empezamos en la presentación
+  // 1. Estados de la aplicación
   const [view, setView] = useState('presentacion'); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState('');
 
-  // 2. Lógica para manejar el login
+  // 2. Lógica para manejar el login con el backend en AWS
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     
-    // Validación básica
-    if (!email.endsWith('@unach.mx')) { 
-      setError('Usa tu correo institucional @unach.mx'); 
-      return; 
-    }
-    if (password.length < 8) { 
-      setError('La contraseña debe tener mínimo 8 caracteres'); 
+    // Validación básica para evitar peticiones vacías
+    if (!email || !password) { 
+      setError('Por favor, ingresa tus credenciales.'); 
       return; 
     }
     
     setLoading(true);
-    // Simulamos la carga antes de entrar al Dashboard
-    setTimeout(() => {
+
+    // Determinar si es Admin o Docente basado en el input
+    // Asumimos que el admin entra con el usuario "admin" o un correo que lo contenga
+    const isAdmin = email === 'admin' || email.includes('admin');
+    const endpoint = isAdmin ? '/api/login' : '/api/login-docente';
+    
+    // Usamos la variable de entorno para la URL de AWS, o el dominio directamente por seguridad
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://siae-unach.duckdns.org';
+    const url = `${baseUrl}${endpoint}`;
+
+    // Armar el payload según lo que espera el backend de Ximena
+    const payload = isAdmin 
+      ? { usuario: email, password: password } 
+      : { rfc: password }; // El docente usa el RFC (lo capturamos en el campo de contraseña por ahora)
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // ¡Login exitoso! Guardamos el token de seguridad
+        localStorage.setItem('jwt_token', data.token); // El nombre "token" depende de cómo lo devuelva el backend
+        
+        // Asignamos el rol y cambiamos la vista al dashboard
+        setRole(isAdmin ? 'admin' : 'docente');
+        setView('dashboard');
+      } else {
+        // Mostramos el error exacto que devuelve FastAPI (ej. "Credenciales inválidas")
+        setError(data.detail || 'Error al iniciar sesión. Verifica tus datos.');
+      }
+    } catch (err) {
+      console.error('Error de conexión:', err);
+      setError('Error conectando con el servidor en AWS. Intenta más tarde.');
+    } finally {
       setLoading(false);
-      setView('dashboard');
-    }, 900);
+    }
+  };
+
+  // 3. Lógica para cerrar sesión y limpiar estados
+  const handleLogout = () => {
+    // Borramos el token para asegurar que la sesión se cierra de verdad
+    localStorage.removeItem('jwt_token');
+    
+    setView('login');
+    setEmail('');
+    setPassword('');
+    setRole('');
   };
 
   // ══════════════════════════════════
@@ -43,7 +87,7 @@ const App = () => {
   }
 
   // ══════════════════════════════════
-  //  VISTA 2: LOGIN Y REGISTRO
+  //  VISTA 2: LOGIN
   // ══════════════════════════════════
   if (view === 'login' || view === 'signup') {
     return (
@@ -70,11 +114,11 @@ const App = () => {
             
             <form onSubmit={handleLogin}>
               <div className="f-group" style={{ marginBottom: '15px' }}>
-                <label className="f-label">Correo institucional</label>
+                <label className="f-label">Correo institucional / Usuario</label>
                 <input 
                   className="f-input" 
-                  type="email" 
-                  placeholder="ejemplo@unach.mx" 
+                  type="text" 
+                  placeholder="ejemplo@unach.mx o admin" 
                   value={email} 
                   onChange={e => setEmail(e.target.value)} 
                   required 
@@ -82,11 +126,12 @@ const App = () => {
                 />
               </div>
               <div className="f-group" style={{ marginBottom: '20px' }}>
-                <label className="f-label">Contraseña</label>
+                {/* Cambiamos la etiqueta dinámicamente para que el docente sepa qué ingresar */}
+                <label className="f-label">Contraseña {email && !email.includes('admin') ? '(RFC para docentes)' : ''}</label>
                 <input 
                   className="f-input" 
                   type="password" 
-                  placeholder="Mínimo 8 caracteres" 
+                  placeholder="Tu contraseña o RFC" 
                   value={password} 
                   onChange={e => setPassword(e.target.value)} 
                   required 
@@ -99,7 +144,7 @@ const App = () => {
                 disabled={loading}
                 style={{width: '100%', padding: '15px', backgroundColor: '#d4a017', border: 'none', fontWeight: 'bold', cursor: 'pointer'}}
               >
-                {loading ? 'Verificando…' : 'Ingresar al sistema →'}
+                {loading ? 'Conectando a AWS…' : 'Ingresar al sistema →'}
               </button>
             </form>
           </div>
@@ -109,17 +154,19 @@ const App = () => {
   }
 
   // ══════════════════════════════════
-  //  VISTA 3: DASHBOARD (Panel Principal)
+  //  VISTA 3: DASHBOARD
   // ══════════════════════════════════
   if (view === 'dashboard') {
     return (
       <div className="app" style={{ backgroundColor: '#faf8f4', minHeight: '100vh' }}>
         <header className="hdr" style={{ backgroundColor: '#002b5c', color: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>UNACH - Dashboard</div>
+          <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
+            UNACH - Panel de {role === 'admin' ? 'Administración' : 'Docentes'}
+          </div>
           <div>
-            <span style={{ marginRight: '20px' }}>docente@unach.mx</span>
+            <span style={{ marginRight: '20px' }}>{email}</span>
             <button 
-              onClick={() => setView('login')} 
+              onClick={handleLogout} 
               style={{ padding: '8px 15px', backgroundColor: 'transparent', border: '1px solid #d4a017', color: 'white', cursor: 'pointer', borderRadius: '5px' }}
             >
               Cerrar sesión
@@ -128,15 +175,57 @@ const App = () => {
         </header>
 
         <main style={{ padding: '40px' }}>
-          <h1 style={{ color: '#002b5c' }}>Bienvenido a tus Microservicios</h1>
-          <p style={{ color: '#666' }}>Aquí conectaremos tus módulos de FastAPI (Horarios, Cursos, etc.) y la base de datos de AWS.</p>
+          {/* CONTENIDO ESPECÍFICO PARA EL ADMINISTRADOR */}
+          {role === 'admin' && (
+            <>
+              <h1 style={{ color: '#002b5c' }}>Supervisión de Microservicios y AWS</h1>
+              <p style={{ color: '#666' }}>Bienvenido. Desde aquí puedes orquestar el API Gateway, monitorear los contenedores Docker y gestionar los accesos globales del sistema.</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginTop: '30px' }}>
+                <a href="https://sistema-unach-frontend.vercel.app/admin" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', cursor: 'pointer' }}>
+                    <h3>Gestión de Usuarios</h3>
+                    <p>Administra docentes y alumnos (Enlace al módulo Vercel).</p>
+                  </div>
+                </a>
+                <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                  <h3>Logs de FastAPI</h3>
+                  <p>Revisa el estado de las peticiones.</p>
+                </div>
+                <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                  <h3>Infraestructura</h3>
+                  <p>Métricas de EC2 y base de datos.</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* CONTENIDO ESPECÍFICO PARA EL DOCENTE/USUARIO */}
+          {role === 'docente' && (
+            <>
+              <h1 style={{ color: '#002b5c' }}>Panel Académico</h1>
+              <p style={{ color: '#666' }}>Bienvenida. Aquí puedes gestionar tus grupos, capturar calificaciones y revisar tus horarios asignados.</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginTop: '30px' }}>
+                <a href="https://sistema-unach-frontend.vercel.app/buzon" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ background: 'white', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #d4a017', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                    <h3>Mis Grupos / Buzón</h3>
+                    <p>Visualiza tus listas y envía mensajes (Enlace al módulo Vercel).</p>
+                  </div>
+                </a>
+                <div style={{ background: 'white', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #002b5c', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                  <h3>Captura de Calificaciones</h3>
+                  <p>Registra las evaluaciones del semestre actual.</p>
+                </div>
+              </div>
+            </>
+          )}
         </main>
       </div>
     );
   }
 
-  // Seguro por si el estado 'view' se pierde
   return null;
 };
 
-export default App;
+export default App;cd

@@ -1,0 +1,9 @@
+# Archivo: /frontend/.env
+
+# URL de tu API Gateway en AWS (Asegurada con HTTPS)
+# React usará esta variable para saber a dónde enviar las peticiones fetch
+VITE_API_GATEWAY_URL=https://api.tu-dominio-unach.com
+
+# Clave pública de algún servicio externo si llegaras a necesitarlo
+# (Por ejemplo, si usaras un mapa, un reCAPTCHA, etc.)
+VITE_PUBLIC_KEY_EJEMPLO=tu_clave_publica_aqui
