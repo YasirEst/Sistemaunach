@@ -1,9 +1,16 @@
-# Archivo: /frontend/.env
+# ─── SEGURIDAD ────────────────────────────────────────────────────────────────
+# Genera una clave segura con: python -c "import secrets; print(secrets.token_hex(32))"
+SECRET_KEY=cambia_esto_por_una_clave_segura_generada
+ALGORITHM=HS256
 
-# URL de tu API Gateway en AWS (Asegurada con HTTPS)
-# React usará esta variable para saber a dónde enviar las peticiones fetch
-VITE_API_GATEWAY_URL=https://api.tu-dominio-unach.com
+# ─── CREDENCIALES ─────────────────────────────────────────────────────────────
+ADMIN_USER=admin_unach
+ADMIN_PASS=cambia_esto_por_contraseña_segura
 
-# Clave pública de algún servicio externo si llegaras a necesitarlo
-# (Por ejemplo, si usaras un mapa, un reCAPTCHA, etc.)
-VITE_PUBLIC_KEY_EJEMPLO=tu_clave_publica_aqui
+# Contraseña genérica temporal para docentes (reemplazar con validación en BD)
+DOCENTE_PASS=cambia_esto_tambien
+
+# ─── CORS ─────────────────────────────────────────────────────────────────────
+# Separados por coma, sin espacios
+# Agrega aquí el dominio real de Vercel de Ximena cuando lo tengas
+ALLOWED_ORIGINS=http://localhost:5173,https://sistema-unach-frontend.vercel.app
