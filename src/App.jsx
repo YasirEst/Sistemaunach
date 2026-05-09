@@ -69,33 +69,54 @@ const App = () => {
       }
   };
 
-  // ─── Registro ────────────────────────────────────────────────────────────────
-  const handleRegister = async (e) => {
+ // ─── Login ───────────────────────────────────────────────────────────────────
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError(''); setSuccessMsg('');
-    
-    if (!email || !password) { setError('Por favor, llena todos los campos para registrarte.'); return; }
-    
-    setLoading(true);
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
-    const url = `${baseUrl}/api/registro`; 
 
-    const payload = { usuario: email.trim(), password: password, rol: regRole };
+    if (!email.trim()) { setError('Por favor, ingresa tu usuario o RFC.'); return; }
+
+    const esAdmin    = email.trim() === (import.meta.env.VITE_ADMIN_USER || 'admin') || email.toLowerCase().includes('admin');
+    const endpoint   = esAdmin ? '/api/login' : '/api/login-docente';
+
+    if (esAdmin && !password) {
+      setError('Los administradores deben ingresar su contraseña.'); return;
+    }
+
+    setLoading(true);
+
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
+    const url     = `${baseUrl}${endpoint}`;
+
+    const body = esAdmin ? { usuario: email.trim(), password } : !password ? { rfc: email.trim() } : { usuario: email.trim(), password };
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body:    JSON.stringify(body),
       });
 
       const data = await response.json();
+
       if (response.ok) {
-        setSuccessMsg('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
-        setView('login');
-        setPassword('');
+        localStorage.setItem('token', data.token);
+
+        // ✅ Intentamos leer el JWT
+        const payload = decodeToken(data.token);
+        
+        // PLAN DE RESPALDO: Si el backend aún no manda el "rol" en el token, lo inferimos
+        let rolFinal = 'docente';
+        if (payload && payload.rol) {
+          rolFinal = payload.rol; // Si el token lo trae, lo usamos
+        } else {
+          rolFinal = esAdmin ? 'admin' : 'docente'; // Si no lo trae, adivinamos por el tipo de login
+        }
+
+        setRol(rolFinal);   // "admin" o "docente"
+        setView('dashboard');
       } else {
-        setError(data.detail || 'Error al crear la cuenta.');
+        setError(data.detail || 'Error al iniciar sesión.');
       }
     } catch (err) {
       setError('Error conectando con el servidor en AWS.');
