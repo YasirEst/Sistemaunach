@@ -5,6 +5,7 @@ import LandingPage from './pages/LandingPage';
 // ─── Helper: decodifica el payload del JWT sin librería externa ───────────────
 const decodeToken = (token) => {
   try {
+    if (!token) return null;
     return JSON.parse(atob(token.split('.')[1]));
   } catch {
     return null;
@@ -12,16 +13,17 @@ const decodeToken = (token) => {
 };
 
 const App = () => {
-  const [view, setView]         = useState('presentacion'); 
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
+  // ─── Estados ─────────────────────────────────────────────────────────────────
+  const [view, setView]             = useState('presentacion'); 
+  const [email, setEmail]           = useState('');
+  const [password, setPassword]     = useState('');
+  const [error, setError]           = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [rol, setRol]           = useState(''); // lee desde el JWT: "admin" | "docente"
-  const [regRole, setRegRole]   = useState('docente'); // Para elegir el rol en el registro
+  const [loading, setLoading]       = useState(false);
+  const [rol, setRol]               = useState(''); // "admin" o "docente"
+  const [regRole, setRegRole]       = useState('docente'); 
 
-  // ─── Puente de seguridad: adjunta el token al link del microservicio ─────────
+  // ─── Puente de seguridad ─────────────────────────────────────────────────────
   const getSecureLink = (baseUrl) => {
     const token = localStorage.getItem('token');
     return `${baseUrl}?token=${token}`;
@@ -30,15 +32,20 @@ const App = () => {
   // ─── Login ───────────────────────────────────────────────────────────────────
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(''); setSuccessMsg('');
+    setError(''); 
+    setSuccessMsg('');
 
-    if (!email.trim()) { setError('Por favor, ingresa tu usuario o RFC.'); return; }
+    if (!email.trim()) { 
+      setError('Por favor, ingresa tu usuario o RFC.'); 
+      return; 
+    }
 
-    const esAdmin    = email.trim() === (import.meta.env.VITE_ADMIN_USER || 'admin') || email.toLowerCase().includes('admin');
-    const endpoint   = esAdmin ? '/api/login' : '/api/login-docente';
+    const esAdmin  = email.trim() === (import.meta.env.VITE_ADMIN_USER || 'admin') || email.toLowerCase().includes('admin');
+    const endpoint = esAdmin ? '/api/login' : '/api/login-docente';
 
     if (esAdmin && !password) {
-      setError('Los administradores deben ingresar su contraseña.'); return;
+      setError('Los administradores deben ingresar su contraseña.'); 
+      return;
     }
 
     setLoading(true);
@@ -46,49 +53,11 @@ const App = () => {
     const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
     const url     = `${baseUrl}${endpoint}`;
 
-    const body = esAdmin ? { usuario: email.trim(), password } : !password ? { rfc: email.trim() } : { usuario: email.trim(), password };
-
-    if (response.ok) {
-        localStorage.setItem('token', data.token);
-
-        // ✅ Intentamos leer el JWT
-        const payload = decodeToken(data.token);
-        
-        // PLAN DE RESPALDO: Si el backend aún no manda el "rol" en el token, lo inferimos
-        let rolFinal = 'docente';
-        if (payload && payload.rol) {
-          rolFinal = payload.rol; // Si el token lo trae, lo usamos
-        } else {
-          rolFinal = esAdmin ? 'admin' : 'docente'; // Si no lo trae, adivinamos por el tipo de login
-        }
-
-        setRol(rolFinal);   // "admin" o "docente"
-        setView('dashboard');
-      } else {
-        setError(data.detail || 'Error al iniciar sesión.');
-      }
-  };
-
- // ─── Login ───────────────────────────────────────────────────────────────────
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError(''); setSuccessMsg('');
-
-    if (!email.trim()) { setError('Por favor, ingresa tu usuario o RFC.'); return; }
-
-    const esAdmin    = email.trim() === (import.meta.env.VITE_ADMIN_USER || 'admin') || email.toLowerCase().includes('admin');
-    const endpoint   = esAdmin ? '/api/login' : '/api/login-docente';
-
-    if (esAdmin && !password) {
-      setError('Los administradores deben ingresar su contraseña.'); return;
-    }
-
-    setLoading(true);
-
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
-    const url     = `${baseUrl}${endpoint}`;
-
-    const body = esAdmin ? { usuario: email.trim(), password } : !password ? { rfc: email.trim() } : { usuario: email.trim(), password };
+    const body = esAdmin 
+      ? { usuario: email.trim(), password } 
+      : !password 
+        ? { rfc: email.trim() } 
+        : { usuario: email.trim(), password };
 
     try {
       const response = await fetch(url, {
@@ -102,29 +71,70 @@ const App = () => {
       if (response.ok) {
         localStorage.setItem('token', data.token);
 
-        // ✅ Intentamos leer el JWT
         const payload = decodeToken(data.token);
         
-        // PLAN DE RESPALDO: Si el backend aún no manda el "rol" en el token, lo inferimos
         let rolFinal = 'docente';
         if (payload && payload.rol) {
-          rolFinal = payload.rol; // Si el token lo trae, lo usamos
+          rolFinal = payload.rol; 
         } else {
-          rolFinal = esAdmin ? 'admin' : 'docente'; // Si no lo trae, adivinamos por el tipo de login
+          rolFinal = esAdmin ? 'admin' : 'docente'; 
         }
 
-        setRol(rolFinal);   // "admin" o "docente"
+        setRol(rolFinal);
         setView('dashboard');
       } else {
-        setError(data.detail || 'Error al iniciar sesión.');
+        setError(data.detail || 'Error al iniciar sesión. Verifica tus datos.');
       }
     } catch (err) {
+      console.error("Error de conexión:", err);
+      setError('Error conectando con el servidor. Verifica el bloqueo de contenido mixto en tu navegador.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─── Registro ────────────────────────────────────────────────────────────────
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError(''); 
+    setSuccessMsg('');
+    
+    if (!email || !password) { 
+      setError('Por favor, llena todos los campos para registrarte.'); 
+      return; 
+    }
+    
+    setLoading(true);
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
+    const url = `${baseUrl}/api/registro`; 
+
+    const payload = { usuario: email.trim(), password: password, rol: regRole };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSuccessMsg('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
+        setView('login');
+        setPassword('');
+      } else {
+        setError(data.detail || 'Error al crear la cuenta. Tal vez ya existe.');
+      }
+    } catch (err) {
+      console.error("Error de registro:", err);
       setError('Error conectando con el servidor en AWS.');
     } finally {
       setLoading(false);
     }
   };
 
+  // ─── Utilidades ──────────────────────────────────────────────────────────────
   const handleLogout = () => {
     localStorage.removeItem('token');
     setView('login'); setEmail(''); setPassword(''); setRol(''); setSuccessMsg('');
