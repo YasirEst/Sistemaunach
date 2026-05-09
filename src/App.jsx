@@ -23,11 +23,11 @@ const App = () => {
   const [rol, setRol]               = useState(''); // "admin" o "docente"
   const [regRole, setRegRole]       = useState('docente'); 
 
-  // ─── Puente de seguridad ─────────────────────────────────────────────────────
+ // ─── Puente de seguridad ─────────────────────────────────────────────────────
   const getSecureLink = (baseUrl) => {
     const token = localStorage.getItem('token');
-    // Le agregamos &rol=admin o &rol=docente a la URL
-    return `${baseUrl}?token=${token}&rol=${rol}`;
+    // Ahora enviamos el token, el rol y el RFC
+    return `${baseUrl}?token=${token}&rol=${rol}&rfc=${email}`;
   };
   
   // ─── Login ───────────────────────────────────────────────────────────────────
