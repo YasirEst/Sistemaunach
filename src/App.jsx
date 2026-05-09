@@ -26,9 +26,10 @@ const App = () => {
   // ─── Puente de seguridad ─────────────────────────────────────────────────────
   const getSecureLink = (baseUrl) => {
     const token = localStorage.getItem('token');
-    return `${baseUrl}?token=${token}`;
+    // Le agregamos &rol=admin o &rol=docente a la URL
+    return `${baseUrl}?token=${token}&rol=${rol}`;
   };
-
+  
   // ─── Login ───────────────────────────────────────────────────────────────────
   const handleLogin = async (e) => {
     e.preventDefault();
