@@ -4,7 +4,7 @@ import LandingPage from './pages/LandingPage';
 
 const App = () => {
   // 1. Estados de la aplicación
-  const [view, setView] = useState('login');
+  const [view, setView] = useState('presentacion'); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,27 +16,40 @@ const App = () => {
     e.preventDefault();
     setError('');
     
-    // Validación básica para evitar peticiones vacías
-    if (!email || !password) { 
-      setError('Por favor, ingresa tus credenciales.'); 
+    // Validación básica
+    if (!email) { 
+      setError('Por favor, ingresa tu usuario, correo o RFC.'); 
       return; 
     }
     
     setLoading(true);
 
-    // Determinar si es Admin o Docente basado en el input
-    // Asumimos que el admin entra con el usuario "admin" o un correo que lo contenga
     const isAdmin = email === 'admin' || email.includes('admin');
     const endpoint = isAdmin ? '/api/login' : '/api/login-docente';
     
-    // Usamos la variable de entorno para la URL de AWS, o el dominio directamente por seguridad
+    // Si es administrador, forzamos que haya ingresado contraseña
+    if (isAdmin && !password) {
+      setError('Los administradores deben ingresar su contraseña.');
+      setLoading(false);
+      return;
+    }
+
+    // URL de AWS (Usa la variable de entorno, o cae en la IP por defecto)
     const baseUrl = import.meta.env.VITE_API_URL || 'http://54.147.115.227:8000';
     const url = `${baseUrl}${endpoint}`;
 
-    // Armar el payload según lo que espera el backend de Ximena
-    const payload = isAdmin 
-      ? { usuario: email, password: password } 
-      : { rfc: password }; // El docente usa el RFC (lo capturamos en el campo de contraseña por ahora)
+    // Armar el payload según el tipo de usuario
+    let payload = {};
+    if (isAdmin) {
+      payload = { usuario: email, password: password };
+    } else {
+      // Magia para el docente: Si dejó la contraseña vacía, mandamos RFC. Si la llenó, mandamos usuario+pass
+      if (!password) {
+        payload = { rfc: email }; 
+      } else {
+        payload = { usuario: email, password: password };
+      }
+    }
 
     try {
       const response = await fetch(url, {
@@ -50,14 +63,14 @@ const App = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // ¡Login exitoso! Guardamos el token de seguridad
-        localStorage.setItem('jwt_token', data.token); // El nombre "token" depende de cómo lo devuelva el backend
+        // ¡Login exitoso! Guardamos el token con el nombre exacto que pide el equipo: 'token'
+        localStorage.setItem('token', data.token); 
         
         // Asignamos el rol y cambiamos la vista al dashboard
         setRole(isAdmin ? 'admin' : 'docente');
         setView('dashboard');
       } else {
-        // Mostramos el error exacto que devuelve FastAPI (ej. "Credenciales inválidas")
+        // Mostramos el error exacto que devuelve FastAPI
         setError(data.detail || 'Error al iniciar sesión. Verifica tus datos.');
       }
     } catch (err) {
@@ -70,8 +83,8 @@ const App = () => {
 
   // 3. Lógica para cerrar sesión y limpiar estados
   const handleLogout = () => {
-    // Borramos el token para asegurar que la sesión se cierra de verdad
-    localStorage.removeItem('jwt_token');
+    // Borramos el token con el nombre correcto
+    localStorage.removeItem('token'); 
     
     setView('login');
     setEmail('');
@@ -114,11 +127,11 @@ const App = () => {
             
             <form onSubmit={handleLogin}>
               <div className="f-group" style={{ marginBottom: '15px' }}>
-                <label className="f-label">Correo institucional / Usuario</label>
+                <label className="f-label">Correo, Usuario o RFC</label>
                 <input 
                   className="f-input" 
                   type="text" 
-                  placeholder="ejemplo@unach.mx o admin" 
+                  placeholder="ej. admin, profe@unach.mx o tu RFC" 
                   value={email} 
                   onChange={e => setEmail(e.target.value)} 
                   required 
@@ -126,15 +139,14 @@ const App = () => {
                 />
               </div>
               <div className="f-group" style={{ marginBottom: '20px' }}>
-                {/* Cambiamos la etiqueta dinámicamente para que el docente sepa qué ingresar */}
-                <label className="f-label">Contraseña {email && !email.includes('admin') ? '(RFC para docentes)' : ''}</label>
+                <label className="f-label">Contraseña (Opcional si usas RFC)</label>
                 <input 
                   className="f-input" 
                   type="password" 
-                  placeholder="Tu contraseña o RFC" 
+                  placeholder="Tu contraseña" 
                   value={password} 
                   onChange={e => setPassword(e.target.value)} 
-                  required 
+                  // NOTA: El required ha sido eliminado para permitir el ingreso solo con RFC
                   style={{width: '100%', padding: '10px', marginTop: '5px'}}
                 />
               </div>
@@ -228,4 +240,4 @@ const App = () => {
   return null;
 };
 
-export default App; 
+export default App;
