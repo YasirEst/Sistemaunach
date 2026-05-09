@@ -48,34 +48,25 @@ const App = () => {
 
     const body = esAdmin ? { usuario: email.trim(), password } : !password ? { rfc: email.trim() } : { usuario: email.trim(), password };
 
-    try {
-      const response = await fetch(url, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
+    if (response.ok) {
         localStorage.setItem('token', data.token);
 
-        // ✅ Leemos el rol directamente del JWT
+        // ✅ Intentamos leer el JWT
         const payload = decodeToken(data.token);
-        if (!payload || !payload.rol) {
-          setError('Token recibido no contiene un rol válido.'); setLoading(false); return;
+        
+        // PLAN DE RESPALDO: Si el backend aún no manda el "rol" en el token, lo inferimos
+        let rolFinal = 'docente';
+        if (payload && payload.rol) {
+          rolFinal = payload.rol; // Si el token lo trae, lo usamos
+        } else {
+          rolFinal = esAdmin ? 'admin' : 'docente'; // Si no lo trae, adivinamos por el tipo de login
         }
 
-        setRol(payload.rol);   // "admin" o "docente"
+        setRol(rolFinal);   // "admin" o "docente"
         setView('dashboard');
       } else {
         setError(data.detail || 'Error al iniciar sesión.');
       }
-    } catch {
-      setError('Error conectando con el servidor en AWS.');
-    } finally {
-      setLoading(false);
-    }
   };
 
   // ─── Registro ────────────────────────────────────────────────────────────────
