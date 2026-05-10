@@ -246,10 +246,6 @@ const App = () => {
                     <p>Acceso al sistema de gestión de aulas, materias y horarios de Luis.</p>
                   </div>
                 </a>
-                <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
-                  <h3>Logs de AWS</h3>
-                  <p>Servicio activo en 100.49.33.221</p>
-                </div>
               </div>
             </>
           )}
