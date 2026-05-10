@@ -319,7 +319,10 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
   ];
   const docenteCards = [
     { title: "Mis Grupos / Buzón",     desc: "Consulta y gestiona tus grupos y comunicados.",              href: "https://sistema-unach-frontend.vercel.app/buzon",   tag: "Activo",       icon: "📬" },
-    { title: "Generación de Horarios", desc: "Accede al sistema de aulas, materias y horarios.",           href: "https://modulo-horario.vercel.app/login",           tag: "En línea",     icon: "📅" },
+    
+    // 👇 Aquí cambiamos el href a null y le cambiamos el texto/tag
+    { title: "Generación de Horarios", desc: "Módulo exclusivo para Administradores.",                     href: null,                                                tag: "Restringido",  icon: "🔒" },
+    
     { title: "Calificaciones",         desc: "Módulo interno de gestión de calificaciones.",               href: null,                                                tag: "Próximamente", icon: "📊" },
   ];
   const cards = rol === "admin" ? adminCards : docenteCards;
