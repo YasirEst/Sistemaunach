@@ -240,6 +240,13 @@ const App = () => {
                     <p>Acceso seguro al módulo de Ximena con tu token actual.</p>
                   </div>
                 </a>
+                // En tu lista de microservicios dentro del Dashboard:
+                <a href={getSecureLink("https://modulo-horario.vercel.app/login")} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div style={{ background: 'white', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #d4a017' }}>
+                    <h3>Generación de Horarios</h3>
+                    <p>Acceso al sistema de gestión de aulas, materias y horarios de Luis.</p>
+                  </div>
+                </a>
                 <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
                   <h3>Logs de AWS</h3>
                   <p>Servicio activo en 100.49.33.221</p>
