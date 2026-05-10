@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles.css'; 
 import LandingPage from './pages/LandingPage'; 
 
-// ─── Helper: decodifica el payload del JWT sin librería externa ───────────────
+// ─── Helper: decodifica el payload del JWT ────────────────────────────────────
 const decodeToken = (token) => {
   try {
     if (!token) return null;
@@ -12,213 +12,7 @@ const decodeToken = (token) => {
   }
 };
 
-const App = () => {
-  // ─── Estados ─────────────────────────────────────────────────────────────────
-  const [view, setView]             = useState('presentacion'); 
-  const [email, setEmail]           = useState('');
-  const [password, setPassword]     = useState('');
-  const [error, setError]           = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [loading, setLoading]       = useState(false);
-  const [rol, setRol]               = useState(''); // "admin" o "docente"
-  const [regRole, setRegRole]       = useState('docente'); 
-
- // ─── Puente de seguridad ─────────────────────────────────────────────────────
-  const getSecureLink = (baseUrl) => {
-    const token = localStorage.getItem('token');
-    // Ahora enviamos el token, el rol y el RFC
-    return `${baseUrl}?token=${token}&rol=${rol}&rfc=${email}`;
-  };
-  
-  // ─── Login ───────────────────────────────────────────────────────────────────
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError(''); 
-    setSuccessMsg('');
-
-    if (!email.trim()) { 
-      setError('Por favor, ingresa tu usuario o RFC.'); 
-      return; 
-    }
-
-    const esAdmin  = email.trim() === (import.meta.env.VITE_ADMIN_USER || 'admin') || email.toLowerCase().includes('admin');
-    const endpoint = esAdmin ? '/api/login' : '/api/login-docente';
-
-    if (esAdmin && !password) {
-      setError('Los administradores deben ingresar su contraseña.'); 
-      return;
-    }
-
-    setLoading(true);
-
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
-    const url     = `${baseUrl}${endpoint}`;
-
-    const body = esAdmin 
-      ? { usuario: email.trim(), password } 
-      : !password 
-        ? { rfc: email.trim() } 
-        : { usuario: email.trim(), password };
-
-    try {
-      const response = await fetch(url, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-
-        const payload = decodeToken(data.token);
-        
-        let rolFinal = 'docente';
-        if (payload && payload.rol) {
-          rolFinal = payload.rol; 
-        } else {
-          rolFinal = esAdmin ? 'admin' : 'docente'; 
-        }
-
-        setRol(rolFinal);
-        setView('dashboard');
-      } else {
-        setError(data.detail || 'Error al iniciar sesión. Verifica tus datos.');
-      }
-    } catch (err) {
-      console.error("Error de conexión:", err);
-      setError('Error conectando con el servidor. Verifica el bloqueo de contenido mixto en tu navegador.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ─── Registro ────────────────────────────────────────────────────────────────
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError(''); 
-    setSuccessMsg('');
-    
-    if (!email || !password) { 
-      setError('Por favor, llena todos los campos para registrarte.'); 
-      return; 
-    }
-    
-    setLoading(true);
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
-    const url = `${baseUrl}/api/registro`; 
-
-    const payload = { usuario: email.trim(), password: password, rol: regRole };
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        setSuccessMsg('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
-        setView('login');
-        setPassword('');
-      } else {
-        setError(data.detail || 'Error al crear la cuenta. Tal vez ya existe.');
-      }
-    } catch (err) {
-      console.error("Error de registro:", err);
-      setError('Error conectando con el servidor en AWS.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ─── Utilidades ──────────────────────────────────────────────────────────────
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setView('login'); setEmail(''); setPassword(''); setRol(''); setSuccessMsg('');
-  };
-
-  const cambiarVista = (nuevaVista) => {
-    setView(nuevaVista); setError(''); setSuccessMsg(''); setEmail(''); setPassword('');
-  };
-
-  // ─── Vistas ──────────────────────────────────────────────────────────────────
-  if (view === 'presentacion') return <LandingPage onIrAlLogin={() => setView('login')} />;
-
-  if (view === 'login' || view === 'registro') {
-    const isLogin = view === 'login';
-
-    return (
-      <div className="ls-wrap">
-        <div className="ls-left">
-          <div className="geo-bg">
-            {[20, 35, 50, 65, 80].map(left => (
-              <div key={left} className="geo-line" style={{ left: `${left}%` }} />
-            ))}
-          </div>
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <span className="ls-badge">Sistema Académico</span>
-            <h1 className="ls-title">Universidad<br/>Autónoma de<br/>Chiapas</h1>
-            <p className="ls-sub">UNACH</p>
-            <div className="ls-rule" />
-            <p className="ls-motto">"Formando líderes con visión humanista..."</p>
-          </div>
-        </div>
-
-        <div className="ls-right">
-          <div className="auth-box">
-            <h2 className="auth-ht">{isLogin ? 'Iniciar sesión' : 'Crear nueva cuenta'}</h2>
-
-            {error && <div className="err-box" style={{ color: 'red', marginBottom: '10px', fontSize: '14px' }}>⚠ {error}</div>}
-            {successMsg && <div style={{color: 'green', marginBottom: '10px', fontSize: '14px', background: '#e6ffe6', padding: '10px', borderRadius: '5px'}}>✓ {successMsg}</div>}
-
-            <form onSubmit={isLogin ? handleLogin : handleRegister}>
-              {!isLogin && (
-                <div className="f-group" style={{ marginBottom: '15px' }}>
-                  <label className="f-label">Tipo de Cuenta</label>
-                  <select className="f-input" value={regRole} onChange={e => setRegRole(e.target.value)} style={{width: '100%', padding: '10px'}}>
-                    <option value="docente">Docente</option>
-                    <option value="admin">Administrador</option>
-                  </select>
-                </div>
-              )}
-
-              <div className="f-group" style={{ marginBottom: '15px' }}>
-                <label className="f-label">{!isLogin && regRole === 'docente' ? 'RFC del Docente' : 'Usuario o Correo'}</label>
-                <input className="f-input" type="text" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%', padding: '10px' }} />
-              </div>
-              <div className="f-group" style={{ marginBottom: '20px' }}>
-                <label className="f-label">Contraseña</label>
-                <input className="f-input" type="password" value={password} onChange={e => setPassword(e.target.value)} required={!isLogin} style={{ width: '100%', padding: '10px' }} />
-              </div>
-              <button className="btn-main" type="submit" disabled={loading} style={{ width: '100%', padding: '15px', backgroundColor: '#d4a017', border: 'none', fontWeight: 'bold', cursor: 'pointer', borderRadius: '5px' }}>
-                {loading ? 'Conectando...' : (isLogin ? 'Ingresar al sistema →' : 'Registrar cuenta')}
-              </button>
-            </form>
-
-            <div style={{textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#666'}}>
-              {isLogin ? (
-                <p>¿No tienes una cuenta? <span onClick={() => cambiarVista('registro')} style={{color: '#002b5c', cursor: 'pointer', fontWeight: 'bold'}}>Regístrate aquí</span></p>
-              ) : (
-                <p>¿Ya tienes cuenta? <span onClick={() => cambiarVista('login')} style={{color: '#002b5c', cursor: 'pointer', fontWeight: 'bold'}}>Inicia sesión</span></p>
-              )}
-            </div>
-
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // DashboardUNACH.jsx
-// Props esperados: rol, email, handleLogout, getSecureLink
-// Uso: <DashboardUNACH rol={rol} email={email} handleLogout={handleLogout} getSecureLink={getSecureLink} />
-
-import { useState, useEffect } from "react";
-
+// ─── Estilos y Componentes Visuales del Dashboard ─────────────────────────────
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
 
@@ -425,7 +219,6 @@ const STYLES = `
   .unach-disabled-card:hover .unach-disabled-overlay { opacity: 1; }
 `;
 
-// ── Íconos SVG ligeros ──────────────────────────────────────────────────────
 const Icon = ({ name, size = 16, color = "currentColor" }) => {
   const paths = {
     home:   "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
@@ -445,7 +238,6 @@ const Icon = ({ name, size = 16, color = "currentColor" }) => {
   );
 };
 
-// ── Tarjeta de módulo ────────────────────────────────────────────────────────
 function ModuleCard({ title, desc, href, tag, icon, delay, getSecureLink }) {
   const badgeCls = tag === "Próximamente" ? "badge-soon" : tag === "En línea" ? "badge-online" : "badge-active";
   const isDisabled = !href;
@@ -487,8 +279,7 @@ function ModuleCard({ title, desc, href, tag, icon, delay, getSecureLink }) {
   );
 }
 
-// ── Componente principal ─────────────────────────────────────────────────────
-export default function DashboardUNACH({ rol = "docente", email = "docente@unach.mx", handleLogout, getSecureLink }) {
+function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
   const [activeNav, setActiveNav] = useState("inicio");
   const [time, setTime] = useState(new Date());
 
@@ -505,16 +296,16 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
   })();
 
   const navItemsAdmin = [
-    { id: "inicio",     label: "Inicio",          icon: <Icon name="home"  size={17} /> },
-    { id: "usuarios",   label: "Usuarios",         icon: <Icon name="users" size={17} /> },
-    { id: "horarios",   label: "Horarios",         icon: <Icon name="cal"   size={17} /> },
-    { id: "reportes",   label: "Reportes",         icon: <Icon name="chart" size={17} /> },
+    { id: "inicio",   label: "Inicio",         icon: <Icon name="home"  size={17} /> },
+    { id: "usuarios", label: "Usuarios",       icon: <Icon name="users" size={17} /> },
+    { id: "horarios", label: "Horarios",       icon: <Icon name="cal"   size={17} /> },
+    { id: "reportes", label: "Reportes",       icon: <Icon name="chart" size={17} /> },
   ];
   const navItemsDocente = [
-    { id: "inicio",        label: "Inicio",          icon: <Icon name="home"  size={17} /> },
-    { id: "grupos",        label: "Mis Grupos",       icon: <Icon name="users" size={17} /> },
-    { id: "horarios",      label: "Horarios",         icon: <Icon name="cal"   size={17} /> },
-    { id: "calificaciones",label: "Calificaciones",   icon: <Icon name="doc"   size={17} /> },
+    { id: "inicio",        label: "Inicio",         icon: <Icon name="home"  size={17} /> },
+    { id: "grupos",        label: "Mis Grupos",     icon: <Icon name="users" size={17} /> },
+    { id: "horarios",      label: "Horarios",       icon: <Icon name="cal"   size={17} /> },
+    { id: "calificaciones",label: "Calificaciones", icon: <Icon name="doc"   size={17} /> },
   ];
   const navItems = rol === "admin" ? navItemsAdmin : navItemsDocente;
 
@@ -523,13 +314,13 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
   const stats = rol === "admin" ? statsAdmin : statsDocente;
 
   const adminCards = [
-    { title: "Gestión de Usuarios",    desc: "Administra el buzón de maestros y sus perfiles académicos.", href: "https://sistema-unach-frontend.vercel.app/admin",  tag: "Activo",        icon: "🏛️" },
-    { title: "Generación de Horarios", desc: "Sistema integral de aulas, materias y horarios.",            href: "https://modulo-horario.vercel.app/login",           tag: "En línea",      icon: "📅" },
+    { title: "Gestión de Usuarios",    desc: "Administra el buzón de maestros y sus perfiles académicos.", href: "https://sistema-unach-frontend.vercel.app/admin",  tag: "Activo",       icon: "🏛️" },
+    { title: "Generación de Horarios", desc: "Sistema integral de aulas, materias y horarios.",            href: "https://modulo-horario.vercel.app/login",          tag: "En línea",     icon: "📅" },
   ];
   const docenteCards = [
-    { title: "Mis Grupos / Buzón",     desc: "Consulta y gestiona tus grupos y comunicados.",              href: "https://sistema-unach-frontend.vercel.app/buzon",   tag: "Activo",        icon: "📬" },
-    { title: "Generación de Horarios", desc: "Accede al sistema de aulas, materias y horarios.",           href: "https://modulo-horario.vercel.app/login",           tag: "En línea",      icon: "📅" },
-    { title: "Calificaciones",         desc: "Módulo interno de gestión de calificaciones.",               href: null,                                                tag: "Próximamente",  icon: "📊" },
+    { title: "Mis Grupos / Buzón",     desc: "Consulta y gestiona tus grupos y comunicados.",              href: "https://sistema-unach-frontend.vercel.app/buzon",   tag: "Activo",       icon: "📬" },
+    { title: "Generación de Horarios", desc: "Accede al sistema de aulas, materias y horarios.",           href: "https://modulo-horario.vercel.app/login",           tag: "En línea",     icon: "📅" },
+    { title: "Calificaciones",         desc: "Módulo interno de gestión de calificaciones.",               href: null,                                                tag: "Próximamente", icon: "📊" },
   ];
   const cards = rol === "admin" ? adminCards : docenteCards;
 
@@ -538,15 +329,13 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
   return (
     <>
       <style>{STYLES}</style>
-
       <div style={{
         display: "flex",
         minHeight: "100vh",
         background: "linear-gradient(160deg, #f2ede6 0%, #ede8e0 100%)",
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       }}>
-
-        {/* ─── Sidebar ───────────────────────────────────────────────── */}
+        {/* ─── Sidebar ─── */}
         <aside className="unach-sidebar" style={{
           width: 248,
           background: "#001f44",
@@ -558,7 +347,6 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
           zIndex: 20,
           borderRight: "1px solid rgba(255,255,255,0.06)",
         }}>
-          {/* Logo */}
           <div style={{ padding: "0 10px 24px", borderBottom: "1px solid rgba(255,255,255,0.09)", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 17, color: "#001f44", animation: "rotateIn 0.55s cubic-bezier(.22,.68,0,1.2) 0.1s both", flexShrink: 0 }}>U</div>
@@ -568,24 +356,14 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
               </div>
             </div>
           </div>
-
-          {/* Nav section label */}
           <div className="unach-section-label">Menú principal</div>
-
           <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
             {navItems.map((item) => (
-              <div
-                key={item.id}
-                className={`unach-nav-item ${activeNav === item.id ? "active" : ""}`}
-                onClick={() => setActiveNav(item.id)}
-              >
-                {item.icon}
-                <span>{item.label}</span>
+              <div key={item.id} className={`unach-nav-item ${activeNav === item.id ? "active" : ""}`} onClick={() => setActiveNav(item.id)}>
+                {item.icon}<span>{item.label}</span>
               </div>
             ))}
           </nav>
-
-          {/* User card */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.09)", paddingTop: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px" }}>
               <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, color: "#001f44", flexShrink: 0, animation: "pulseGold 3s ease-in-out infinite" }}>
@@ -604,10 +382,8 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
           </div>
         </aside>
 
-        {/* ─── Contenido principal ───────────────────────────────────── */}
+        {/* ─── Contenido principal ─── */}
         <main style={{ marginLeft: 248, flex: 1, padding: "44px 52px 60px", maxWidth: "calc(100vw - 248px)" }}>
-
-          {/* Header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 40, animation: "fadeUp 0.4s ease both" }}>
             <div>
               <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#d4a017" }}>{greeting}</p>
@@ -625,7 +401,6 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
             </div>
           </div>
 
-          {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 44 }}>
             {stats.map((s, i) => (
               <div key={i} className="unach-stat" style={{ animation: `fadeUp 0.45s ease ${80 + i * 70}ms both` }}>
@@ -638,7 +413,6 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
             ))}
           </div>
 
-          {/* Módulos */}
           <div style={{ marginBottom: 18, animation: "fadeUp 0.4s ease 0.28s both" }}>
             <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "#001f44" }}>
               {rol === "admin" ? "Microservicios" : "Módulos académicos"}
@@ -652,16 +426,147 @@ export default function DashboardUNACH({ rol = "docente", email = "docente@unach
             ))}
           </div>
 
-          {/* Footer */}
           <div style={{ marginTop: 56, paddingTop: 22, borderTop: "1px solid rgba(0,43,92,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center", animation: "fadeUp 0.4s ease 0.6s both" }}>
             <span style={{ fontSize: 12, color: "#b4a99d" }}>SIAE — Sistema Integral de Administración Escolar</span>
-            <span style={{ fontSize: 12, color: "#b4a99d" }}>UNACH © 2025</span>
+            <span style={{ fontSize: 12, color: "#b4a99d" }}>UNACH © 2026</span>
           </div>
         </main>
       </div>
     </>
   );
 }
+
+// ─── Aplicación Principal ─────────────────────────────────────────────────────
+const App = () => {
+  const [view, setView]             = useState('presentacion'); 
+  const [email, setEmail]           = useState('');
+  const [password, setPassword]     = useState('');
+  const [error, setError]           = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading]       = useState(false);
+  const [rol, setRol]               = useState(''); 
+  const [regRole, setRegRole]       = useState('docente'); 
+
+  const getSecureLink = (baseUrl) => {
+    const token = localStorage.getItem('token');
+    return `${baseUrl}?token=${token}&rol=${rol}&rfc=${email}`;
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(''); setSuccessMsg('');
+
+    if (!email.trim()) { setError('Por favor, ingresa tu usuario o RFC.'); return; }
+
+    const esAdmin  = email.trim() === (import.meta.env.VITE_ADMIN_USER || 'admin') || email.toLowerCase().includes('admin');
+    const endpoint = esAdmin ? '/api/login' : '/api/login-docente';
+
+    if (esAdmin && !password) { setError('Los administradores deben ingresar su contraseña.'); return; }
+
+    setLoading(true);
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
+    const url     = `${baseUrl}${endpoint}`;
+    const body = esAdmin ? { usuario: email.trim(), password } : !password ? { rfc: email.trim() } : { usuario: email.trim(), password };
+
+    try {
+      const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        const payload = decodeToken(data.token);
+        let rolFinal = 'docente';
+        if (payload && payload.rol) { rolFinal = payload.rol; } else { rolFinal = esAdmin ? 'admin' : 'docente'; }
+        
+        setRol(rolFinal);
+        setView('dashboard');
+      } else {
+        setError(data.detail || 'Error al iniciar sesión. Verifica tus datos.');
+      }
+    } catch (err) {
+      console.error("Error de conexión:", err);
+      setError('Error conectando con el servidor. Verifica el bloqueo de contenido mixto en tu navegador.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError(''); setSuccessMsg('');
+    if (!email || !password) { setError('Por favor, llena todos los campos para registrarte.'); return; }
+    
+    setLoading(true);
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
+    const url = `${baseUrl}/api/registro`; 
+    const payload = { usuario: email.trim(), password: password, rol: regRole };
+
+    try {
+      const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await response.json();
+      if (response.ok) {
+        setSuccessMsg('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
+        setView('login'); setPassword('');
+      } else { setError(data.detail || 'Error al crear la cuenta. Tal vez ya existe.'); }
+    } catch (err) { setError('Error conectando con el servidor en AWS.'); } finally { setLoading(false); }
+  };
+
+  const handleLogout = () => { localStorage.removeItem('token'); setView('login'); setEmail(''); setPassword(''); setRol(''); setSuccessMsg(''); };
+  const cambiarVista = (nuevaVista) => { setView(nuevaVista); setError(''); setSuccessMsg(''); setEmail(''); setPassword(''); };
+
+  if (view === 'presentacion') return <LandingPage onIrAlLogin={() => setView('login')} />;
+
+  if (view === 'login' || view === 'registro') {
+    const isLogin = view === 'login';
+    return (
+      <div className="ls-wrap">
+        <div className="ls-left">
+          <div className="geo-bg">{[20, 35, 50, 65, 80].map(left => <div key={left} className="geo-line" style={{ left: `${left}%` }} />)}</div>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <span className="ls-badge">Sistema Académico</span>
+            <h1 className="ls-title">Universidad<br/>Autónoma de<br/>Chiapas</h1>
+            <p className="ls-sub">UNACH</p><div className="ls-rule" /><p className="ls-motto">"Formando líderes con visión humanista..."</p>
+          </div>
+        </div>
+        <div className="ls-right">
+          <div className="auth-box">
+            <h2 className="auth-ht">{isLogin ? 'Iniciar sesión' : 'Crear nueva cuenta'}</h2>
+            {error && <div className="err-box" style={{ color: 'red', marginBottom: '10px', fontSize: '14px' }}>⚠ {error}</div>}
+            {successMsg && <div style={{color: 'green', marginBottom: '10px', fontSize: '14px', background: '#e6ffe6', padding: '10px', borderRadius: '5px'}}>✓ {successMsg}</div>}
+            <form onSubmit={isLogin ? handleLogin : handleRegister}>
+              {!isLogin && (
+                <div className="f-group" style={{ marginBottom: '15px' }}>
+                  <label className="f-label">Tipo de Cuenta</label>
+                  <select className="f-input" value={regRole} onChange={e => setRegRole(e.target.value)} style={{width: '100%', padding: '10px'}}>
+                    <option value="docente">Docente</option><option value="admin">Administrador</option>
+                  </select>
+                </div>
+              )}
+              <div className="f-group" style={{ marginBottom: '15px' }}>
+                <label className="f-label">{!isLogin && regRole === 'docente' ? 'RFC del Docente' : 'Usuario o Correo'}</label>
+                <input className="f-input" type="text" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%', padding: '10px' }} />
+              </div>
+              <div className="f-group" style={{ marginBottom: '20px' }}>
+                <label className="f-label">Contraseña</label>
+                <input className="f-input" type="password" value={password} onChange={e => setPassword(e.target.value)} required={!isLogin} style={{ width: '100%', padding: '10px' }} />
+              </div>
+              <button className="btn-main" type="submit" disabled={loading} style={{ width: '100%', padding: '15px', backgroundColor: '#d4a017', border: 'none', fontWeight: 'bold', cursor: 'pointer', borderRadius: '5px' }}>
+                {loading ? 'Conectando...' : (isLogin ? 'Ingresar al sistema →' : 'Registrar cuenta')}
+              </button>
+            </form>
+            <div style={{textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#666'}}>
+              {isLogin ? <p>¿No tienes una cuenta? <span onClick={() => cambiarVista('registro')} style={{color: '#002b5c', cursor: 'pointer', fontWeight: 'bold'}}>Regístrate aquí</span></p> : <p>¿Ya tienes cuenta? <span onClick={() => cambiarVista('login')} style={{color: '#002b5c', cursor: 'pointer', fontWeight: 'bold'}}>Inicia sesión</span></p>}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ¡Aquí es donde mandamos a llamar al nuevo diseño!
+  if (view === 'dashboard') {
+    return <DashboardUNACH rol={rol} email={email} handleLogout={handleLogout} getSecureLink={getSecureLink} />;
+  }
 
   return null;
 };
