@@ -315,11 +315,11 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
 
   const adminCards = [
     { title: "Gestión de Usuarios",    desc: "Administra el buzón de maestros y sus perfiles académicos.", href: "https://sistema-unach-frontend.vercel.app/admin",  tag: "Activo",       icon: "🏛️" },
-    { title: "Generación de Horarios", desc: "Sistema integral de aulas, materias y horarios.",            href: "https://modulo-horario.vercel.app/login",          tag: "En línea",     icon: "📅" },
+    { title: "Generación de Horarios", desc: "Sistema integral de aulas, materias y horarios.",            href: "https://modulo-horario.duckdns.org/login",          tag: "En línea",     icon: "📅" },
   ];
   const docenteCards = [
     { title: "Mis Grupos / Buzón",     desc: "Consulta y gestiona tus grupos y comunicados.",              href: "https://sistema-unach-frontend.vercel.app/buzon",   tag: "Activo",       icon: "📬" },
-    { title: "Generación de Horarios", desc: "Accede al sistema de aulas, materias y horarios.",           href: "https://modulo-horario.vercel.app/login",           tag: "En línea",     icon: "📅" },
+    { title: "Generación de Horarios", desc: "Accede al sistema de aulas, materias y horarios.",           href: "https://modulo-horario.duckdns.org/login",           tag: "En línea",     icon: "📅" },
     { title: "Calificaciones",         desc: "Módulo interno de gestión de calificaciones.",               href: null,                                                tag: "Próximamente", icon: "📊" },
   ];
   const cards = rol === "admin" ? adminCards : docenteCards;
