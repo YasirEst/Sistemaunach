@@ -344,21 +344,29 @@ function AnimatedNumber({ target, suffix = "" }) {
   const [value, setValue] = useState(0);
   const ref = useRef(null);
   useEffect(() => {
+    let t; // 1. Declaramos 't' afuera para que React la pueda ver al limpiar
+
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
         const isNum = !isNaN(parseInt(target));
         if (!isNum) { setValue(target); return; }
         const end = parseInt(target);
         let start = 0; const step = Math.ceil(end / 40);
-        const t = setInterval(() => {
+        
+        t = setInterval(() => { // 2. Le quitamos el 'const' a esta línea
           start = Math.min(start + step, end);
           setValue(start);
           if (start >= end) clearInterval(t);
         }, 35);
       }
     }, { threshold: 0.5 });
+    
     if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
+    
+    return () => {
+      obs.disconnect();
+      if (t) clearInterval(t); // 3. ¡Aquí matamos el temporizador al salir!
+    };
   }, [target]);
   return <span ref={ref}>{value}{suffix}</span>;
 }
