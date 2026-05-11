@@ -296,10 +296,7 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
   })();
 
   const navItemsAdmin = [
-    { id: "inicio",   label: "Inicio",   icon: <Icon name="home"  size={17} /> },
-    { id: "usuarios", label: "Usuarios", icon: <Icon name="users" size={17} /> },
-    { id: "horarios", label: "Horarios", icon: <Icon name="cal"   size={17} /> },
-    { id: "reportes", label: "Reportes", icon: <Icon name="chart" size={17} /> },
+    { id: "inicio", label: "Inicio", icon: <Icon name="home" size={17} /> },
   ];
   const navItemsDocente = [
     { id: "inicio",         label: "Inicio",         icon: <Icon name="home"  size={17} /> },
