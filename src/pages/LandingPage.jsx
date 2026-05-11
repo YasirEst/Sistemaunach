@@ -379,34 +379,32 @@ export default function LandingPage({ onIrAlLogin }) {
 
   const handleChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus("sending");
+    setStatus("sending"); 
 
-    // Compose a detailed email via mailto
-    const subject = encodeURIComponent(`[Mesa de Ayuda UNACH] ${form.tipo || "Reporte Técnico"} – ${form.nombre}`);
-    const body = encodeURIComponent(
-`REPORTE TÉCNICO - SISTEMA UNACH
-═══════════════════════════════════════
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
+      
+      const response = await fetch(`${baseUrl}/api/enviar-reporte`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form), 
+      });
 
-Usuario:       ${form.nombre}
-Correo:        ${form.correo}
-Tipo de Issue: ${form.tipo || "No especificado"}
-Fecha:         ${new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" })}
-
-DESCRIPCIÓN DEL PROBLEMA:
-───────────────────────────
-${form.descripcion}
-
-─────────────────────────────────────
-Generado automáticamente por Mesa de Ayuda UNACH`
-    );
-
-    // Open mail client (works universally without backend)
-    window.open(`mailto:rodolfo.estrada@unach.mx?subject=${subject}&body=${body}`, "_blank");
-
-    // Show success after a short delay
-    setTimeout(() => setStatus("success"), 600);
+      if (response.ok) {
+        setStatus("success");
+      } else {
+        setStatus("idle");
+        alert("Hubo un problema al enviar el reporte. Por favor, intenta de nuevo.");
+      }
+    } catch (error) {
+      console.error("Error de conexión:", error);
+      setStatus("idle");
+      alert("Error conectando con el servidor. Verifica tu conexión.");
+    }
   };
 
   return (

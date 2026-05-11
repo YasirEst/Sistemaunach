@@ -296,35 +296,74 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
   })();
 
   const navItemsAdmin = [
-    { id: "inicio",   label: "Inicio",         icon: <Icon name="home"  size={17} /> },
-    { id: "usuarios", label: "Usuarios",       icon: <Icon name="users" size={17} /> },
-    { id: "horarios", label: "Horarios",       icon: <Icon name="cal"   size={17} /> },
-    { id: "reportes", label: "Reportes",       icon: <Icon name="chart" size={17} /> },
+    { id: "inicio",   label: "Inicio",   icon: <Icon name="home"  size={17} /> },
+    { id: "usuarios", label: "Usuarios", icon: <Icon name="users" size={17} /> },
+    { id: "horarios", label: "Horarios", icon: <Icon name="cal"   size={17} /> },
+    { id: "reportes", label: "Reportes", icon: <Icon name="chart" size={17} /> },
   ];
   const navItemsDocente = [
-    { id: "inicio",        label: "Inicio",         icon: <Icon name="home"  size={17} /> },
-    { id: "grupos",        label: "Mis Grupos",     icon: <Icon name="users" size={17} /> },
-    { id: "horarios",      label: "Horarios",       icon: <Icon name="cal"   size={17} /> },
-    { id: "calificaciones",label: "Calificaciones", icon: <Icon name="doc"   size={17} /> },
+    { id: "inicio",         label: "Inicio",         icon: <Icon name="home"  size={17} /> },
+    { id: "grupos",         label: "Mis Grupos",     icon: <Icon name="users" size={17} /> },
+    { id: "horarios",       label: "Horarios",       icon: <Icon name="cal"   size={17} /> },
+    { id: "calificaciones", label: "Calificaciones", icon: <Icon name="doc"   size={17} /> },
   ];
   const navItems = rol === "admin" ? navItemsAdmin : navItemsDocente;
 
-  const statsAdmin   = [{ label: "Módulos activos", val: "2" }, { label: "Docentes", val: "248" }, { label: "Semestre", val: "2025‑A" }];
+  const statsAdmin   = [{ label: "Módulos activos", val: "3" }, { label: "Docentes", val: "248" }, { label: "Semestre", val: "2025‑A" }];
   const statsDocente = [{ label: "Grupos asignados", val: "4" }, { label: "Materias", val: "6" }, { label: "Semestre", val: "2025‑A" }];
   const stats = rol === "admin" ? statsAdmin : statsDocente;
 
+  // ─── Tarjetas Admin (3 módulos) ───────────────────────────────────────────
   const adminCards = [
-    { title: "Gestión de Usuarios",    desc: "Administra el buzón de maestros y sus perfiles académicos.", href: "https://sistema-unach-frontend.vercel.app/admin",  tag: "Activo",       icon: "🏛️" },
-    { title: "Generación de Horarios", desc: "Sistema integral de aulas, materias y horarios.",            href: "https://modulo-horario.vercel.app/login",          tag: "En línea",     icon: "📅" },
+    {
+      title: "Gestión de Usuarios",
+      desc:  "Administra el buzón de maestros y sus perfiles académicos.",
+      href:  "https://sistema-unach-frontend.vercel.app/admin",
+      tag:   "Activo",
+      icon:  "🏛️",
+    },
+    {
+      title: "Generación de Horarios",
+      desc:  "Sistema integral de aulas, materias y horarios.",
+      href:  "https://modulo-horario.vercel.app/login",
+      tag:   "En línea",
+      icon:  "📅",
+    },
+    // ─── Módulo de Jonathan ───────────────────────────────────────────────
+    {
+      title: "Servicio Social",
+      desc:  "Gestión de solicitudes y aprobaciones de servicio social.",
+      href:  "https://modulo-servicio-social.vercel.app/login",
+      tag:   "En línea",
+      icon:  "🎓",
+    },
   ];
+
+  // ─── Tarjetas Docente ─────────────────────────────────────────────────────
   const docenteCards = [
-    { title: "Mis Grupos / Buzón",     desc: "Consulta y gestiona tus grupos y comunicados.",              href: "https://sistema-unach-frontend.vercel.app/buzon",   tag: "Activo",       icon: "📬" },
-    
-    // 👇 Aquí cambiamos el href a null y le cambiamos el texto/tag
-    { title: "Generación de Horarios", desc: "Módulo exclusivo para Administradores.",                     href: null,                                                tag: "Restringido",  icon: "🔒" },
-    
-    { title: "Calificaciones",         desc: "Módulo interno de gestión de calificaciones.",               href: null,                                                tag: "Próximamente", icon: "📊" },
+    {
+      title: "Mis Grupos / Buzón",
+      desc:  "Consulta y gestiona tus grupos y comunicados.",
+      href:  "https://sistema-unach-frontend.vercel.app/buzon",
+      tag:   "Activo",
+      icon:  "📬",
+    },
+    {
+      title: "Generación de Horarios",
+      desc:  "Módulo exclusivo para Administradores.",
+      href:  null,
+      tag:   "Restringido",
+      icon:  "🔒",
+    },
+    {
+      title: "Calificaciones",
+      desc:  "Módulo interno de gestión de calificaciones.",
+      href:  null,
+      tag:   "Próximamente",
+      icon:  "📊",
+    },
   ];
+
   const cards = rol === "admin" ? adminCards : docenteCards;
 
   const initials = email ? email[0].toUpperCase() : "D";
@@ -352,24 +391,45 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
         }}>
           <div style={{ padding: "0 10px 24px", borderBottom: "1px solid rgba(255,255,255,0.09)", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 17, color: "#001f44", animation: "rotateIn 0.55s cubic-bezier(.22,.68,0,1.2) 0.1s both", flexShrink: 0 }}>U</div>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12,
+                background: "#d4a017",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 700, fontSize: 17, color: "#001f44",
+                animation: "rotateIn 0.55s cubic-bezier(.22,.68,0,1.2) 0.1s both",
+                flexShrink: 0,
+              }}>U</div>
               <div>
                 <div style={{ color: "white", fontWeight: 600, fontSize: 14, letterSpacing: "0.02em" }}>UNACH</div>
                 <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Portal Académico</div>
               </div>
             </div>
           </div>
+
           <div className="unach-section-label">Menú principal</div>
+
           <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
             {navItems.map((item) => (
-              <div key={item.id} className={`unach-nav-item ${activeNav === item.id ? "active" : ""}`} onClick={() => setActiveNav(item.id)}>
+              <div
+                key={item.id}
+                className={`unach-nav-item ${activeNav === item.id ? "active" : ""}`}
+                onClick={() => setActiveNav(item.id)}
+              >
                 {item.icon}<span>{item.label}</span>
               </div>
             ))}
           </nav>
+
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.09)", paddingTop: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, color: "#001f44", flexShrink: 0, animation: "pulseGold 3s ease-in-out infinite" }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: "#d4a017",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 700, fontSize: 14, color: "#001f44",
+                flexShrink: 0,
+                animation: "pulseGold 3s ease-in-out infinite",
+              }}>
                 {initials}
               </div>
               <div style={{ minWidth: 0 }}>
@@ -387,6 +447,8 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
 
         {/* ─── Contenido principal ─── */}
         <main style={{ marginLeft: 248, flex: 1, padding: "44px 52px 60px", maxWidth: "calc(100vw - 248px)" }}>
+
+          {/* Saludo y reloj */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 40, animation: "fadeUp 0.4s ease both" }}>
             <div>
               <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#d4a017" }}>{greeting}</p>
@@ -404,6 +466,7 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
             </div>
           </div>
 
+          {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 44 }}>
             {stats.map((s, i) => (
               <div key={i} className="unach-stat" style={{ animation: `fadeUp 0.45s ease ${80 + i * 70}ms both` }}>
@@ -416,6 +479,7 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
             ))}
           </div>
 
+          {/* Título sección módulos */}
           <div style={{ marginBottom: 18, animation: "fadeUp 0.4s ease 0.28s both" }}>
             <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "#001f44" }}>
               {rol === "admin" ? "Microservicios" : "Módulos académicos"}
@@ -423,12 +487,14 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
             <p style={{ margin: "4px 0 0", fontSize: 13, color: "#9ca3af" }}>Accede a los módulos disponibles de tu perfil.</p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: rol === "admin" ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 20 }}>
+          {/* Grid de tarjetas — siempre 3 columnas */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
             {cards.map((card, i) => (
               <ModuleCard key={i} {...card} delay={320 + i * 90} getSecureLink={getSecureLink} />
             ))}
           </div>
 
+          {/* Footer */}
           <div style={{ marginTop: 56, paddingTop: 22, borderTop: "1px solid rgba(0,43,92,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center", animation: "fadeUp 0.4s ease 0.6s both" }}>
             <span style={{ fontSize: 12, color: "#b4a99d" }}>SIAE — Sistema Integral de Administración Escolar</span>
             <span style={{ fontSize: 12, color: "#b4a99d" }}>UNACH © 2026</span>
@@ -441,14 +507,14 @@ function DashboardUNACH({ rol, email, handleLogout, getSecureLink }) {
 
 // ─── Aplicación Principal ─────────────────────────────────────────────────────
 const App = () => {
-  const [view, setView]             = useState('presentacion'); 
+  const [view, setView]             = useState('presentacion');
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
   const [error, setError]           = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading]       = useState(false);
-  const [rol, setRol]               = useState(''); 
-  const [regRole, setRegRole]       = useState('docente'); 
+  const [rol, setRol]               = useState('');
+  const [regRole, setRegRole]       = useState('docente');
 
   const getSecureLink = (baseUrl) => {
     const token = localStorage.getItem('token');
@@ -469,7 +535,7 @@ const App = () => {
     setLoading(true);
     const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
     const url     = `${baseUrl}${endpoint}`;
-    const body = esAdmin ? { usuario: email.trim(), password } : !password ? { rfc: email.trim() } : { usuario: email.trim(), password };
+    const body    = esAdmin ? { usuario: email.trim(), password } : !password ? { rfc: email.trim() } : { usuario: email.trim(), password };
 
     try {
       const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -480,7 +546,6 @@ const App = () => {
         const payload = decodeToken(data.token);
         let rolFinal = 'docente';
         if (payload && payload.rol) { rolFinal = payload.rol; } else { rolFinal = esAdmin ? 'admin' : 'docente'; }
-        
         setRol(rolFinal);
         setView('dashboard');
       } else {
@@ -498,10 +563,10 @@ const App = () => {
     e.preventDefault();
     setError(''); setSuccessMsg('');
     if (!email || !password) { setError('Por favor, llena todos los campos para registrarte.'); return; }
-    
+
     setLoading(true);
     const baseUrl = import.meta.env.VITE_API_URL || 'http://100.49.33.221:8000';
-    const url = `${baseUrl}/api/registro`; 
+    const url     = `${baseUrl}/api/registro`;
     const payload = { usuario: email.trim(), password: password, rol: regRole };
 
     try {
@@ -510,12 +575,24 @@ const App = () => {
       if (response.ok) {
         setSuccessMsg('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
         setView('login'); setPassword('');
-      } else { setError(data.detail || 'Error al crear la cuenta. Tal vez ya existe.'); }
-    } catch (err) { setError('Error conectando con el servidor en AWS.'); } finally { setLoading(false); }
+      } else {
+        setError(data.detail || 'Error al crear la cuenta. Tal vez ya existe.');
+      }
+    } catch (err) {
+      setError('Error conectando con el servidor en AWS.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLogout = () => { localStorage.removeItem('token'); setView('login'); setEmail(''); setPassword(''); setRol(''); setSuccessMsg(''); };
-  const cambiarVista = (nuevaVista) => { setView(nuevaVista); setError(''); setSuccessMsg(''); setEmail(''); setPassword(''); };
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setView('login'); setEmail(''); setPassword(''); setRol(''); setSuccessMsg('');
+  };
+
+  const cambiarVista = (nuevaVista) => {
+    setView(nuevaVista); setError(''); setSuccessMsg(''); setEmail(''); setPassword('');
+  };
 
   if (view === 'presentacion') return <LandingPage onIrAlLogin={() => setView('login')} />;
 
@@ -524,24 +601,29 @@ const App = () => {
     return (
       <div className="ls-wrap">
         <div className="ls-left">
-          <div className="geo-bg">{[20, 35, 50, 65, 80].map(left => <div key={left} className="geo-line" style={{ left: `${left}%` }} />)}</div>
+          <div className="geo-bg">
+            {[20, 35, 50, 65, 80].map(left => <div key={left} className="geo-line" style={{ left: `${left}%` }} />)}
+          </div>
           <div style={{ position: 'relative', zIndex: 1 }}>
             <span className="ls-badge">Sistema Académico</span>
             <h1 className="ls-title">Universidad<br/>Autónoma de<br/>Chiapas</h1>
-            <p className="ls-sub">UNACH</p><div className="ls-rule" /><p className="ls-motto">"Formando líderes con visión humanista..."</p>
+            <p className="ls-sub">UNACH</p>
+            <div className="ls-rule" />
+            <p className="ls-motto">"Formando líderes con visión humanista..."</p>
           </div>
         </div>
         <div className="ls-right">
           <div className="auth-box">
             <h2 className="auth-ht">{isLogin ? 'Iniciar sesión' : 'Crear nueva cuenta'}</h2>
-            {error && <div className="err-box" style={{ color: 'red', marginBottom: '10px', fontSize: '14px' }}>⚠ {error}</div>}
-            {successMsg && <div style={{color: 'green', marginBottom: '10px', fontSize: '14px', background: '#e6ffe6', padding: '10px', borderRadius: '5px'}}>✓ {successMsg}</div>}
+            {error     && <div className="err-box" style={{ color: 'red', marginBottom: '10px', fontSize: '14px' }}>⚠ {error}</div>}
+            {successMsg && <div style={{ color: 'green', marginBottom: '10px', fontSize: '14px', background: '#e6ffe6', padding: '10px', borderRadius: '5px' }}>✓ {successMsg}</div>}
             <form onSubmit={isLogin ? handleLogin : handleRegister}>
               {!isLogin && (
                 <div className="f-group" style={{ marginBottom: '15px' }}>
                   <label className="f-label">Tipo de Cuenta</label>
-                  <select className="f-input" value={regRole} onChange={e => setRegRole(e.target.value)} style={{width: '100%', padding: '10px'}}>
-                    <option value="docente">Docente</option><option value="admin">Administrador</option>
+                  <select className="f-input" value={regRole} onChange={e => setRegRole(e.target.value)} style={{ width: '100%', padding: '10px' }}>
+                    <option value="docente">Docente</option>
+                    <option value="admin">Administrador</option>
                   </select>
                 </div>
               )}
@@ -557,8 +639,11 @@ const App = () => {
                 {loading ? 'Conectando...' : (isLogin ? 'Ingresar al sistema →' : 'Registrar cuenta')}
               </button>
             </form>
-            <div style={{textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#666'}}>
-              {isLogin ? <p>¿No tienes una cuenta? <span onClick={() => cambiarVista('registro')} style={{color: '#002b5c', cursor: 'pointer', fontWeight: 'bold'}}>Regístrate aquí</span></p> : <p>¿Ya tienes cuenta? <span onClick={() => cambiarVista('login')} style={{color: '#002b5c', cursor: 'pointer', fontWeight: 'bold'}}>Inicia sesión</span></p>}
+            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#666' }}>
+              {isLogin
+                ? <p>¿No tienes una cuenta? <span onClick={() => cambiarVista('registro')} style={{ color: '#002b5c', cursor: 'pointer', fontWeight: 'bold' }}>Regístrate aquí</span></p>
+                : <p>¿Ya tienes cuenta? <span onClick={() => cambiarVista('login')} style={{ color: '#002b5c', cursor: 'pointer', fontWeight: 'bold' }}>Inicia sesión</span></p>
+              }
             </div>
           </div>
         </div>
@@ -566,7 +651,6 @@ const App = () => {
     );
   }
 
-  // ¡Aquí es donde mandamos a llamar al nuevo diseño!
   if (view === 'dashboard') {
     return <DashboardUNACH rol={rol} email={email} handleLogout={handleLogout} getSecureLink={getSecureLink} />;
   }
